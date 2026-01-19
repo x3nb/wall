@@ -884,4 +884,64 @@
       window.openUserModal = async (userId) => {
         if (!userId) return;
         try {
-          const { data } = await supabase.from('profiles
+          const { data } = await supabase.from('profiles .select('*').eq('id', userId).single();
+    const modalBody = document.getElementById('modal-body');
+    modalBody.innerHTML = `
+      <img src="${data.avatar_url || 'default.png'}" style="width:100px; height:100px; border-radius:50%;">
+      <h3>${data.username}</h3>
+      <p>${data.bio || 'No bio yet.'}</p>
+      <textarea id="message-input" placeholder="Send a message..."></textarea>
+      <button onclick="sendMessage(${userId})">Send</button>
+      <button onclick="addFriend(${userId})">Add Friend</button>
+    `;
+    document.getElementById('modal').classList.add('show');
+  } catch (e) {
+    console.error('Load user error', e);
+  }
+};
+window.sendMessage = async (toUser) => {
+  const message = document.getElementById('message-input').value.trim();
+  if (!message) return;
+  try {
+    await supabase.from('messages').insert({ from_user: currentUser.id, to_user, message });
+    alert('Message sent!');
+    closeModal();
+  } catch (e) {
+    console.error('Send message error', e);
+  }
+};
+window.addFriend = async (friendId) => {
+  try {
+    await supabase.from('friends').insert({ user_id: currentUser.id, friend_id: friendId, status: 'pending' });
+    alert('Friend request sent!');
+    closeModal();
+  } catch (e) {
+    console.error('Add friend error', e);
+  }
+};
+
+// Logout
+window.logout = async () => {
+  try {
+    await setOnlineStatus(false);
+    await supabase.auth.signOut();
+    window.currentUser = null;
+    // Reset UI
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('auth-buttons').style.display = 'flex';
+    document.getElementById('logout-btn').style.display = 'none';
+    document.getElementById('auth-form').style.display = 'none';
+    // Clear data
+    document.getElementById('notes-board').innerHTML = '';
+    document.getElementById('personal-notes').innerHTML = '';
+    document.getElementById('shoutbox').innerHTML = '';
+    alert('Logged out successfully!');
+  } catch (e) {
+    console.error('Logout error', e);
+    alert('Error logging out');
+  }
+};
+  });
+</script>
+</body>
+</html>

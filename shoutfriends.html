@@ -567,42 +567,41 @@
           alert('Auth error: ' + e.message);
         }
       };
-
-      // Profile functions
-      async function loadProfile() {
-        try {
-          const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-          if (data) {
-            currentUser.username = data.username || currentUser.email.split('@')[0];
-            document.getElementById('profile-username').value = data.username ?? '';
-            document.getElementById('social-link').value = data.social_link ?? '';
-            document.getElementById('avatar-url').value = data.avatar_url ?? '';
-            document.getElementById('profile-bio').value = data.bio ?? '';
-            if (data.avatar_url) document.getElementById('avatar-img').src = data.avatar_url;
-          } else {
-            currentUser.username = currentUser.email.split('@')[0];
-          }
-        } catch (e) {
-          console.error('Profile load error', e);
-          currentUser.username = currentUser.email.split('@')[0];
-        }
-      }
-      window.saveProfile = async () => {
-        const username = document.getElementById('profile-username').value.trim();
-        const social = document.getElementById('social-link').value.trim();
-        const avatar = document.getElementById('avatar-url').value.trim();
-        const bio = document.getElementById('profile-bio').value.trim();
-        if (!username) { alert('Username required'); return; }
-        try {
-          await supabase.from('profiles').upsert({ id: currentUser.id, username, social_link: social, avatar_url: avatar, bio, updated_at: new Date() });
-          currentUser.username = username;
-          if (avatar) document.getElementById('avatar-img').src = avatar;
-          alert('Profile saved!');
-        } catch (e) {
-          console.error('Profile save error', e);
-          alert('Error saving profile');
-        }
-      };
+async function loadProfile() {
+  try {
+    const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (data) {
+      currentUser.username = data.username || currentUser.email.split('@')[0];
+      document.getElementById('profile-username').value = data.username ?? '';
+      document.getElementById('social-link').value = data.social_link ?? '';
+      document.getElementById('avatar-url').value = data.avatar_url ?? '';
+      document.getElementById('profile-bio').value = data.bio ?? '';
+      if (data.avatar_url) document.getElementById('avatar-img').src = data.avatar_url;
+    } else {
+      currentUser.username = currentUser.email.split('@')[0];
+    }
+  } catch (e) {
+    console.error('Profile load error', e);
+    currentUser.username = currentUser.email.split('@')[0];
+  }
+}
+window.saveProfile = async () => {
+  const username = document.getElementById('profile-username').value.trim();
+  const social = document.getElementById('social-link').value.trim();
+  const avatar = document.getElementById('avatar-url').value.trim();
+  const bio = document.getElementById('profile-bio').value.trim();
+  if (!username) { alert('Username required'); return; }
+  try {
+    await supabase.from('profiles').upsert({ id: currentUser.id, username, social_link: social, avatar_url: avatar, bio, updated_at: new Date() });
+    currentUser.username = username;
+    if (avatar) document.getElementById('avatar-img').src = avatar;
+    alert('Profile saved!');
+  } catch (e) {
+    console.error('Profile save error', e);
+    alert('Error saving profile');
+  }
+};
+     
 
       // Notes functions
       async function loadNotes() {

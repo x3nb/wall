@@ -318,6 +318,21 @@
         transform: translateX(0);
       }
     }
+    .mantra {
+  pointer-events: auto; /* Allow clicks */
+}
+.mantra:hover .mantra-controls {
+  display: block; /* Show controls on hover */
+}
+.mantra.paused .mantra-edit {
+  display: block; /* Show edit when paused */
+}
+.resume-btn {
+  display: none; /* Hide resume by default */
+}
+.mantra.paused .resume-btn {
+  display: block; /* Show resume when paused */
+}
     .mantra.paused {
       animation-play-state: paused;
       border: 2px solid #f0f;

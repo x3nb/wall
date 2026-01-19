@@ -328,3 +328,181 @@
             await loadShouts();
             subscribeToShouts();
           }
+        } catch (e) {
+          alert('Auth error: ' + e.message);
+        }
+      };
+
+      // Profile functions
+      async function loadProfile() {
+        try {
+          const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+          if (data) {
+            currentUser.username = data.username || currentUser.email.split('@')[0];
+            document.getElementById('profile-username').value = data.username ?? '';
+            document.getElementById('social-link').value = data.social_link ?? '';
+            document.getElementById('avatar-url').value = data.avatar_url ?? '';
+            if (data.avatar_url) document.getElementById('avatar-img').src = data.avatar_url;
+          } else {
+            currentUser.username = currentUser.email.split('@')[0];
+          }
+        } catch (e) {
+          console.error('Profile load error', e);
+          currentUser.username = currentUser.email.split('@')[0];
+        }
+      }
+      window.saveProfile = async () => {
+        const username = document.getElementById('profile-username').value.trim();
+        const social = document.getElementById('social-link').value.trim();
+        const avatar = document.getElementById('avatar-url').value.trim();
+        if (!username) { alert('Username required'); return; }
+        try {
+          await supabase.from('profiles').upsert({ id: currentUser.id, username, social_link: social, avatar_url: avatar, updated_at: new Date() });
+          currentUser.username = username;
+          if (avatar) document.getElementById('avatar-img').src = avatar;
+          alert('Profile saved!');
+        } catch (e) {
+          console.error('Profile save error', e);
+          alert('Error saving profile');
+        }
+      };
+
+      // Notes functions
+      async function loadNotes() {
+        try {
+          const { data } = await supabase.from('chalkboard_notes').select('*').order('created_at', { ascending: false }).limit(50);
+          window.allNotes = data;
+          renderNotes(data);
+        } catch (e) {
+          console.error('Load notes error', e);
+        }
+      }
+      function renderNotes(notes) {
+        const board = document.getElementById('notes-board');
+        board.innerHTML = '';
+        notes.forEach(note => {
+          const div = document.createElement('div');
+          div.className = 'note';
+          div.style.setProperty('--rot', note.rotation + 'deg');
+          div.innerHTML = `<strong>${note.username}</strong><br>${note.message}<br><small>${note.tags || ''}</small>
+            <div class="note-actions">
+              <button onclick="likeNote(${note.id})">Like (${note.likes || 0})</button>
+              <button onclick="commentNote(${note.id})">Comment</button>
+            </div>`;
+          board.appendChild(div);
+        });
+      }
+      window.filterNotes = () => {
+        const query = document.getElementById('search-notes').value.toLowerCase();
+        const filtered = allNotes.filter(note => note.message.toLowerCase().includes(query) || (note.tags && note.tags.toLowerCase().includes(query)));
+        renderNotes(filtered);
+      };
+      window.postNote = async () => {
+        const message = document.getElementById('note-input').value.trim();
+        const tags = document.getElementById('note-tags').value.trim();
+        if (!message) return;
+        const rotation = Math.floor(Math.random() * 10) - 5;
+        try {
+          await supabase.from('chalkboard_notes').insert({ user_id: currentUser.id, username: currentUser.username, message, tags, rotation, likes: 0 });
+          document.getElementById('note-input').value = '';
+          document.getElementById('note-tags').value = '';
+          await loadNotes();
+        } catch (e) {
+          console.error('Post note error', e);
+        }
+      };
+      window.likeNote = async (id) => {
+        try {
+          const { data } = await supabase.from('chalkboard_notes').select('likes').eq('id', id).single();
+          await supabase.from('chalkboard_notes').update({ likes: (data.likes || 0) + 1 }).eq('id', id);
+          await loadNotes();
+        } catch (e) {
+          console.error('Like error', e);
+        }
+      };
+     window.commentNote = (id) => {
+  // Simple prompt for demo; expand to a modal
+  const comment = prompt('Add a comment:');
+  if (comment) {
+    // Assume a comments table or append to note; for simplicity, alert
+    alert('Comment added: ' + comment);
+    // In a real app, insert into a 'comments' table: await supabase.from('comments').insert({ note_id: id, user_id: currentUser.id, username: currentUser.username, comment });
+  }
+};
+
+// Personal notes functions
+async function loadPersonalNotes() {
+  try {
+    const { data } = await supabase.from('personal_notes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    const container = document.getElementById('personal-notes');
+    container.innerHTML = '';
+    data.forEach(note => {
+      const div = document.createElement('div');
+      div.className = 'note';
+      div.innerHTML = `<strong>Private Note</strong><br>${note.message}<br><small>${new Date(note.created_at).toLocaleString()}</small>`;
+      container.appendChild(div);
+    });
+  } catch (e) {
+    console.error('Load personal notes error', e);
+  }
+}
+window.postPersonalNote = async () => {
+  const message = document.getElementById('personal-note-input').value.trim();
+  if (!message) return;
+  try {
+    await supabase.from('personal_notes').insert({ user_id: currentUser.id, message });
+    document.getElementById('personal-note-input').value = '';
+    await loadPersonalNotes();
+  } catch (e) {
+    console.error('Post personal note error', e);
+  }
+};
+
+// Shoutbox functions
+async function loadShouts() {
+  try {
+    const { data } = await supabase.from('shoutbox_messages').select('*').order('created_at', { ascending: false }).limit(20);
+    const box = document.getElementById('shoutbox');
+    box.innerHTML = '';
+    data.reverse().forEach(shout => {
+      const div = document.createElement('div');
+      div.className = 'shout';
+      div.innerHTML = `<strong>${shout.username}:</strong> ${shout.message}`;
+      box.appendChild(div);
+    });
+  } catch (e) {
+    console.error('Load shouts error', e);
+  }
+}
+window.postShout = async () => {
+  const message = document.getElementById('shout-input').value.trim();
+  if (!message) return;
+  try {
+    await supabase.from('shoutbox_messages').insert({ user_id: currentUser.id, username: currentUser.username, message });
+    document.getElementById('shout-input').value = '';
+    await loadShouts();
+  } catch (e) {
+    console.error('Post shout error', e);
+  }
+};
+function subscribeToShouts() {
+  supabase
+    .channel('shoutbox')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shoutbox_messages' }, (payload) => {
+      loadShouts();
+    })
+    .subscribe();
+}
+
+// Logout
+window.logout = async () => {
+  await supabase.auth.signOut();
+  window.currentUser = null;
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('auth-buttons').style.display = 'flex';
+  document.getElementById('logout-btn').style.display = 'none';
+};
+    });
+  </script>
+</body>
+</html>

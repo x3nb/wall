@@ -881,10 +881,10 @@
       }
 
       // User modal
-      window.openUserModal = async (userId) => {
-        if (!userId) return;
-        try {
-          const { data } = await supabase.from('profiles .select('*').eq('id', userId).single();
+window.openUserModal = async (userId) => {
+  if (!userId) return;
+  try {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
       <img src="${data.avatar_url || 'default.png'}" style="width:100px; height:100px; border-radius:50%;">

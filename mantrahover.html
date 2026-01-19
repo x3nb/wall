@@ -699,29 +699,31 @@
         }
       };
       function createFloatingMantra(text, id) {
-        const sky = document.getElementById('zen-den-sky');
-        const mantra = document.createElement('div');
-        mantra.className = 'mantra';
-        mantra.innerHTML = `${text}
-          <div class="mantra-controls">
-            <button onclick="deleteMantra(${id})">Delete</button>
-          </div>
-          <div class="mantra-edit">
-            <input type="text" id="add-word-${id}" placeholder="Add word..." onkeydown="if(event.key==='Enter') addWord(${id})">
-            <button onclick="addWord(${id})">Add</button>
-          </div>`;
-        mantra.style.left = `calc(50% + ${Math.random() * 100 - 50}px)`; // Slight random start
-        mantra.onclick = () => togglePause(mantra, id);
-        sky.appendChild(mantra);
-        // Remove after animation
-        setTimeout(() => {
-          if (mantra.parentNode && !mantra.classList.contains('paused')) mantra.remove();
-        }, 12000);
-        // Auto-resume if paused too long
-        setTimeout(() => {
-          if (mantra.classList.contains('paused')) resumeMantra(mantra);
-        }, 30000);
-      }
+  const sky = document.getElementById('zen-den-sky');
+  const mantra = document.createElement('div');
+  mantra.className = 'mantra';
+  mantra.innerHTML = `${text}
+    <div class="mantra-controls">
+      <button onclick="resumeMantra(this.closest('.mantra'))" class="resume-btn">Resume</button>
+      <button onclick="deleteMantra(${id})">Delete</button>
+    </div>
+    <div class="mantra-edit">
+      <input type="text" id="add-word-${id}" placeholder="Add word..." onkeydown="if(event.key==='Enter') addWord(${id})">
+      <button onclick="addWord(${id})">Add</button>
+    </div>`;
+  mantra.style.left = `calc(50% + ${Math.random() * 100 - 50}px)`; // Slight random start
+  mantra.onclick = () => togglePause(mantra, id);
+  sky.appendChild(mantra);
+  // Remove after animation
+  setTimeout(() => {
+    if (mantra.parentNode && !mantra.classList.contains('paused')) mantra.remove();
+  }, 12000);
+  // Auto-resume if paused too long
+  setTimeout(() => {
+    if (mantra.classList.contains('paused')) resumeMantra(mantra);
+  }, 30000);
+}
+      
       function togglePause(mantra, id) {
         if (mantra.classList.contains('paused')) {
           resumeMantra(mantra);

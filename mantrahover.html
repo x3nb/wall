@@ -732,11 +732,11 @@
         }
       }
       function resumeMantra(mantra) {
-        mantra.classList.remove('paused');
-        // Restart animation by re-applying
-        mantra.style.animation = 'none';
-        setTimeout(() => mantra.style.animation = '', 10);
-      }
+  mantra.classList.remove('paused');
+  // Restart animation
+  mantra.style.animation = 'none';
+  setTimeout(() => mantra.style.animation = '', 10);
+}
       window.addWord = async (id) => {
         const input = document.getElementById(`add-word-${id}`);
         const newWord = input.value.trim();

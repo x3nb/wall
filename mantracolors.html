@@ -486,6 +486,7 @@
       window.allNotes = []; // For search
       window.friends = []; // For friends list
       window.onlineUsers = []; // For active users
+      window.mantraColors = ['cornflowerblue', 'violet', 'mauve', 'purple', 'lavender', 'green']; // Note: 'grassgreen' approximated to 'green'
       window.mantraCounter = 0; // For spacing   
       // Check for existing session on load (persistent login)
       const { data: { session }, error } = await supabase.auth.getSession();

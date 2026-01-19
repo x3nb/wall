@@ -411,16 +411,17 @@
           <button onclick="postShout()">Shout</button>
         </div>
       </div>
+    
       <!-- Zen Den Tab (Personal Space) -->
-      <div id="den-tab" class="tab-content">
-        <div class="paper">
-          <h2 style="font-family:'Vast Shadow',cursive;">Your Zen Den</h2>
-          <p>Private reflections and drafts. Only you can see these.</p>
-          <div id="personal-notes"></div>
-          <textarea id="personal-note-input" placeholder="Meditate here..."></textarea>
-          <button onclick="postPersonalNote()">Save to Den</button>
-        </div>
-      </div>
+<div id="den-tab" class="tab-content">
+  <div class="paper">
+    <h2 style="font-family:'Vast Shadow',cursive;">Your Zen Den</h2>
+    <p>Mysterious Mantras: Float your thoughts upwards. Only you can see these.</p>
+    <div id="zen-den-sky"></div>
+    <textarea id="mantra-input" placeholder="Whisper a mantra..."></textarea>
+    <button onclick="floatMantra()">Float Mantra</button>
+  </div>
+</div>
       <!-- Profile Tab -->
       <div id="profile-tab" class="tab-content">
         <div class="paper">

@@ -338,6 +338,18 @@
     .tabs { flex-direction: column; }
     .drawer { width: 250px; }
   }
+  .mantra.paused {
+  animation-play-state: paused;
+  border: 2px solid #f0f;
+  box-shadow: 0 0 10px #f0f;
+}
+.mantra-edit {
+  display: none;
+  margin-top: 10px;
+}
+.mantra.paused .mantra-edit {
+  display: block;
+}
 </style>
 </head>
 <body>

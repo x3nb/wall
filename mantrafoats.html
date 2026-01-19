@@ -689,43 +689,71 @@
         console.error('Float mantra error', e);
       }
     };
-    function createFloatingMantra(text, id) {
-      const sky = document.getElementById('zen-den-sky');
-      const mantra = document.createElement('div');
-      mantra.className = 'mantra';
-      mantra.innerHTML = `${text}
-        <div class="mantra-controls">
-          <button onclick="editMantra(${id}, '${text.replace(/'/g, "\\'")}')">Edit</button>
-          <button onclick="deleteMantra(${id})">Delete</button>
-        </div>`;
-      mantra.style.left = `calc(50% + ${Math.random() * 100 - 50}px)`; // Slight random start
-      sky.appendChild(mantra);
-      // Remove after animation
-      setTimeout(() => {
-        if (mantra.parentNode) mantra.remove();
-      }, 12000);
+   function createFloatingMantra(text, id) {
+  const sky = document.getElementById('zen-den-sky');
+  const mantra = document.createElement('div');
+  mantra.className = 'mantra';
+  mantra.innerHTML = `${text}
+    <div class="mantra-controls">
+      <button onclick="deleteMantra(${id})">Delete</button>
+    </div>
+    <div class="mantra-edit">
+      <input type="text" id="add-word-${id}" placeholder="Add word..." onkeydown="if(event.key==='Enter') addWord(${id})">
+      <button onclick="addWord(${id})">Add</button>
+    </div>`;
+  mantra.style.left = `calc(50% + ${Math.random() * 100 - 50}px)`;
+  mantra.onclick = () => togglePause(mantra, id);
+  sky.appendChild(mantra);
+  // Auto-remove after animation
+  setTimeout(() => {
+    if (mantra.parentNode && !mantra.classList.contains('paused')) mantra.remove();
+  }, 12000);
+  // Auto-resume if paused too long
+  setTimeout(() => {
+    if (mantra.classList.contains('paused')) resumeMantra(mantra);
+  }, 30000);
+}
+function togglePause(mantra, id) {
+  if (mantra.classList.contains('paused')) {
+    resumeMantra(mantra);
+  } else {
+    mantra.classList.add('paused');
+  }
+}
+function resumeMantra(mantra) {
+  mantra.classList.remove('paused');
+  // Restart animation by re-applying
+  mantra.style.animation = 'none';
+  setTimeout(() => mantra.style.animation = '', 10);
+}
+window.addWord = async (id) => {
+  const input = document.getElementById(`add-word-${id}`);
+  const newWord = input.value.trim();
+  if (!newWord) return;
+  try {
+    const { data } = await supabase.from('personal_notes').select('message').eq('id', id).single();
+    const updatedMessage = data.message + ' ' + newWord;
+    await supabase.from('personal_notes').update({ message: updatedMessage }).eq('id', id);
+    // Update display
+    const mantra = input.closest('.mantra');
+    mantra.firstChild.textContent = updatedMessage;
+    input.value = '';
+    resumeMantra(mantra); // Resume after adding
+  } catch (e) {
+    console.error('Add word error', e);
+  }
+};
+window.deleteMantra = async (id) => {
+  if (confirm('Delete this mantra?')) {
+    try {
+      await supabase.from('personal_notes').delete().eq('id', id);
+      // Remove from DOM
+      document.querySelector(`[onclick*="deleteMantra(${id})"]`).closest('.mantra').remove();
+    } catch (e) {
+      console.error('Delete mantra error', e);
     }
-    window.editMantra = async (id, oldText) => {
-      const newText = prompt('Edit mantra:', oldText);
-      if (newText && newText !== oldText) {
-        try {
-          await supabase.from('personal_notes').update({ message: newText }).eq('id', id);
-          await loadPersonalNotes(); // Refresh
-        } catch (e) {
-          console.error('Edit mantra error', e);
-        }
-      }
-    };
-    window.deleteMantra = async (id) => {
-      if (confirm('Delete this mantra?')) {
-        try {
-          await supabase.from('personal_notes').delete().eq('id', id);
-          await loadPersonalNotes(); // Refresh
-        } catch (e) {
-          console.error('Delete mantra error', e);
-        }
-      }
-    };
+  }
+};
 
     // Shoutbox functions
     async function loadShouts() {

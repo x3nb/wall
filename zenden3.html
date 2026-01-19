@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Punk Zen Temple</title>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Vast+Shadow&display=swap" rel="stylesheet" />
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      font-family: 'Press Start 2P', cursive;
+      color: white;
+      overflow-y: auto;
+      height: 100vh;
+    }
+    .background-shapes {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      animation: float 10s infinite linear;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); }
+      100% { transform: translateY(-100vh) rotate(360deg); }
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+    /* Tabs */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .tab-button {
+      padding: 10px 20px;
+      background: #333;
+      color: white;
+      border: 2px solid #f0f;
+      cursor: pointer;
+      font-family: 'Press Start 2P', cursive;
+      margin: 0 5px;
+    }
+    .tab-button.active {
+      background: #f0f;
+      color: #000;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    /* Avatar & headline */
+    #user-avatar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px auto;
+    }
+    #avatar-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+    }
+    #avatar-title {
+      font-family: 'Vast Shadow', cursive;
+      color: #f0f;
+      margin-top: 10px;
+      font-size: 1.2em;
+      text-shadow: 2px 2px #000;
+    }
+    /* Auth buttons */
+    #auth-buttons {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+    #auth-buttons button {
+      margin: 0;
+      padding: 10px 20px;
+      background: #f0f;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-family: 'Press Start 2P', cursive;
+    }
+    /* Panels */
+    .paper {
+      background: rgba(0,0,0,0.8);
+      border: 2px solid #f0f;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+    }
+    #signup-message {
+      color: lime;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    /* Chalkboard notes */
+    #chalkboard {
+      background: #1e2f1e;
+      border: 3px dashed #ccc;
+      padding: 15px;
+    }
+    #notes-board {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .note {
+      width: 150px;
+      min-height: 120px;
+      padding: 10px;
+      background: #ffeb3b;
+      color: #000;
+      font-size: 0.6em;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
+      transform: rotate(var(--rot));
+      position: relative;
+    }
+    .note-actions {
+      margin-top: 10px;
+      font-size: 0.5em;
+    }
+    .note-actions button {
+      margin: 0 5px;
+      padding: 5px;
+      font-size: 0.5em;
+    }
+    /* Shoutbox */
+    #shoutbox {
+      max-height: 300px;
+      overflow-y: auto;
+      background: #111;
+      border: 1px solid #f0f;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .shout {
+      margin: 5px 0;
+      padding: 5px;
+      background: #222;
+      border-left: 3px solid #f0f;
+    }
+    /* Forms */
+    textarea, input {
+      padding: 10px;
+      font-family: 'Press Start 2P';
+      width: 90%;
+      margin: 5px 0;
+    }
+    button {
+      padding: 10px 15px;
+      cursor: pointer;
+      background: #f0f;
+      color: #000;
+      border: none;
+      font-family: 'Press Start 2P';
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .note { width: 100%; }
+      .tabs { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="background-shapes" id="shapes"></div>
+  <div class="container">
+    <!-- Avatar + headline -->
+    <div id="user-avatar">
+      <img id="avatar-img" src="officialsticker.png" alt="User Avatar">
+      <div id="avatar-title">Punk Zen Temple</div>
+      <button id="logout-btn" onclick="logout()" style="margin-top:10px; padding:5px 10px; font-family:'Press Start 2P'; cursor:pointer; display:none;">Log Out</button>
+    </div>
+    <!-- Auth buttons -->
+    <div id="auth-buttons">
+      <button onclick="showSignUp()">Sign Up</button>
+      <button onclick="showSignIn()">Log In</button>
+    </div>
+    <!-- Auth form -->
+    <div class="paper" id="auth-form" style="display:none;">
+      <h2 style="font-family:'Vast Shadow',cursive;">Enter the Temple</h2>
+      <input type="email" id="auth-email" placeholder="Email" /><br>
+      <input type="password" id="auth-password" placeholder="Password" /><br>
+      <button onclick="submitAuth()">Submit</button>
+      <button onclick="cancelAuth()">Cancel</button>
+      <div id="signup-message"></div>
+    </div>
+    <!-- Main content with tabs -->
+    <div id="main-content" style="display:none;">
+      <div class="tabs">
+        <button class="tab-button active" onclick="showTab('wall')">Communal Wall</button>
+        <button class="tab-button" onclick="showTab('den')">Zen Den</button>
+        <button class="tab-button" onclick="showTab('profile')">Profile</button>
+      </div>
+      <!-- Communal Wall Tab -->
+      <div id="wall-tab" class="tab-content active">
+        <div class="paper" id="chalkboard">
+          <h2 style="font-family:'Vast Shadow',cursive;">Communal Wall</h2>
+          <input type="text" id="search-notes" placeholder="Search notes..." oninput="filterNotes()" />
+          <div id="notes-board"></div>
+          <textarea id="note-input" placeholder="Share your zen..."></textarea>
+          <input type="text" id="note-tags" placeholder="Tags (e.g., #Zen #Punk)" />
+          <button onclick="postNote()">Post It</button>
+        </div>
+        <div class="paper">
+          <h3>Shoutbox</h3>
+          <div id="shoutbox"></div>
+          <textarea id="shout-input" placeholder="Shout something..."></textarea>
+          <button onclick="postShout()">Shout</button>
+        </div>
+      </div>
+      <!-- Zen Den Tab (Personal Space) -->
+      <div id="den-tab" class="tab-content">
+        <div class="paper">
+          <h2 style="font-family:'Vast Shadow',cursive;">Your Zen Den</h2>
+          <p>Private reflections and drafts. Only you can see these.</p>
+          <div id="personal-notes"></div>
+          <textarea id="personal-note-input" placeholder="Meditate here..."></textarea>
+          <button onclick="postPersonalNote()">Save to Den</button>
+        </div>
+      </div>
+      <!-- Profile Tab -->
+      <div id="profile-tab" class="tab-content">
+        <div class="paper">
+          <h3>Edit Profile</h3>
+          <input id="profile-username" placeholder="Username" />
+          <input id="social-link" placeholder="Your social link" />
+          <input id="avatar-url" placeholder="Avatar URL" />
+          <button onclick="saveProfile()">Save Profile</button> 
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Floating shapes
+      const shapesContainer = document.getElementById('shapes');
+      for (let i = 0; i < 20; i++) {
+        const shape = document.createElement('div');
+        shape.className = 'shape';
+        const size = 10 + Math.random() * 30;
+        shape.style.width = shape.style.height = size + 'px';
+        shape.style.top = Math.random() * 100 + '%';
+        shape.style.left = Math.random() * 100 + '%';
+        shape.style.background = 'linear-gradient(45deg,#f0f,#0ff,#ff0)';
+        shape.style.transform = `rotate(${Math.random() * 360}deg)`;
+        shape.style.animationDuration = (10 + Math.random() * 20) + 's';
+        shapesContainer.appendChild(shape);
+      }
+      // Supabase
+      const supabaseUrl = 'https://hwymepujsvfqjkbullaf.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eW1lcHVqc3ZmcWprYnVsbGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDczOTQsImV4cCI6MjA4NDI4MzM5NH0.V6-Cm331IocSXDqe-v6iAZA3TV1STyEHyQI43lcXU_4';
+      window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+      window.authMode = null;
+      window.currentUser = null;
+      window.allNotes = []; // For search
+
+      // Tab switching
+      window.showTab = (tab) => {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+        document.getElementById(tab + '-tab').classList.add('active');
+        document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
+      };
+
+      // Auth functions
+      window.showSignUp = () => { window.authMode = 'signup'; showForm(); };
+      window.showSignIn = () => { window.authMode = 'signin'; showForm(); };
+      window.cancelAuth = () => {
+        document.getElementById('auth-form').style.display = 'none';
+        document.getElementById('auth-buttons').style.display = 'flex';
+        document.getElementById('signup-message').innerText = '';
+        window.authMode = null;
+      };
+      function showForm() {
+        document.getElementById('auth-form').style.display = 'block';
+        document.getElementById('auth-buttons').style.display = 'none';
+        document.getElementById('signup-message').innerText = '';
+      }
+      window.submitAuth = async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if (!email || !password) { alert('Enter email and password'); return; }
+        try {
+          if (authMode === 'signup') {
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) throw error;
+            document.getElementById('signup-message').innerText = 'Sign-up successful! Check your email.';
+            document.getElementById('auth-buttons').innerHTML = '<button onclick="showSignIn()">Log In</button>';
+            document.getElementById('auth-buttons').style.display = 'flex';
+            document.getElementById('auth-form').style.display = 'none';
+          } else if (authMode === 'signin') {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            window.currentUser = data.user;
+            document.getElementById('auth-form').style.display = 'none';
+            document.getElementById('auth-buttons').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('logout-btn').style.display = 'block';
+            await loadProfile();
+            await loadNotes();
+            await loadPersonalNotes();
+            await loadShouts();
+            subscribeToShouts();
+          }
+        } catch (e) {
+          alert('Auth error: ' + e.message);
+        }
+      };
+
+      // Profile functions
+      async function loadProfile() {
+        try {
+          const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+          if (data) {
+            currentUser.username = data.username || currentUser.email.split('@')[0];
+            document.getElementById('profile-username').value = data.username ?? '';
+            document.getElementById('social-link').value = data.social_link ?? '';
+            document.getElementById('avatar-url').value = data.avatar_url ?? '';
+            if (data.avatar_url) document.getElementById('avatar-img').src = data.avatar_url;
+          } else {
+            currentUser.username = currentUser.email.split('@')[0];
+          }
+        } catch (e) {
+          console.error('Profile load error', e);
+          currentUser.username = currentUser.email.split('@')[0];
+        }
+      }
+      window.saveProfile = async () => {
+        const username = document.getElementById('profile-username').value.trim();
+        const social = document.getElementById('social-link').value.trim();
+        const avatar = document.getElementById('avatar-url').value.trim();
+        if (!username) { alert('Username required'); return; }
+        try {
+          await supabase.from('profiles').upsert({ id: currentUser.id, username, social_link: social, avatar_url: avatar, updated_at: new Date() });
+          currentUser.username = username;
+          if (avatar) document.getElementById('avatar-img').src = avatar;
+          alert('Profile saved!');
+        } catch (e) {
+          console.error('Profile save error', e);
+          alert('Error saving profile');
+        }
+      };
+
+      // Notes functions
+      async function loadNotes() {
+        try {
+          const { data } = await supabase.from('chalkboard_notes').select('*').order('created_at', { ascending: false }).limit(50);
+          window.allNotes = data;
+          renderNotes(data);
+        } catch (e) {
+          console.error('Load notes error', e);
+        }
+      }
+      function renderNotes(notes) {
+        const board = document.getElementById('notes-board');
+        board.innerHTML = '';
+        notes.forEach(note => {
+          const div = document.createElement('div');
+          div.className = 'note';
+          div.style.setProperty('--rot', note.rotation + 'deg');
+          div.innerHTML = `<strong>${note.username}</strong><br>${note.message}<br><small>${note.tags || ''}</small>
+            <div class="note-actions">
+              <button onclick="likeNote(${note.id})">Like (${note.likes || 0})</button>
+              <button onclick="commentNote(${note.id})">Comment</button>
+            </div>`;
+          board.appendChild(div);
+        });
+      }
+      window.filterNotes = () => {
+        const query = document.getElementById('search-notes').value.toLowerCase();
+        const filtered = allNotes.filter(note => note.message.toLowerCase().includes(query) || (note.tags && note.tags.toLowerCase().includes(query)));
+        renderNotes(filtered);
+      };
+      window.postNote = async () => {
+        const message = document.getElementById('note-input').value.trim();
+        const tags = document.getElementById('note-tags').value.trim();
+        if (!message) return;
+        const rotation = Math.floor(Math.random() * 10) - 5;
+        try {
+          await supabase.from('chalkboard_notes').insert({ user_id: currentUser.id, username: currentUser.username, message, tags, rotation, likes: 0 });
+          document.getElementById('note-input').value = '';
+          document.getElementById('note-tags').value = '';
+          await loadNotes();
+        } catch (e) {
+          console.error('Post note error', e);
+        }
+      };
+      window.likeNote = async (id) => {
+        try {
+          const { data } = await supabase.from('chalkboard_notes').select('likes').eq('id', id).single();
+          await supabase.from('chalkboard_notes').update({ likes: (data.likes || 0) + 1 }).eq('id', id);
+          await loadNotes();
+        } catch (e) {
+          console.error('Like error', e);
+        }
+      };
+     window.commentNote = (id) => {
+  // Simple prompt for demo; expand to a modal
+  const comment = prompt('Add a comment:');
+  if (comment) {
+    // Assume a comments table or append to note; for simplicity, alert
+    alert('Comment added: ' + comment);
+    // In a real app, insert into a 'comments' table: await supabase.from('comments').insert({ note_id: id, user_id: currentUser.id, username: currentUser.username, comment });
+  }
+};
+
+// Personal notes functions
+async function loadPersonalNotes() {
+  try {
+    const { data } = await supabase.from('personal_notes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    const container = document.getElementById('personal-notes');
+    container.innerHTML = '';
+    data.forEach(note => {
+      const div = document.createElement('div');
+      div.className = 'note';
+      div.innerHTML = `<strong>Private Note</strong><br>${note.message}<br><small>${new Date(note.created_at).toLocaleString()}</small>`;
+      container.appendChild(div);
+    });
+  } catch (e) {
+    console.error('Load personal notes error', e);
+  }
+}
+window.postPersonalNote = async () => {
+  const message = document.getElementById('personal-note-input').value.trim();
+  if (!message) return;
+  try {
+    await supabase.from('personal_notes').insert({ user_id: currentUser.id, message });
+    document.getElementById('personal-note-input').value = '';
+    await loadPersonalNotes();
+  } catch (e) {
+    console.error('Post personal note error', e);
+  }
+};
+
+// Shoutbox functions
+async function loadShouts() {
+  try {
+    const { data } = await supabase.from('shoutbox_messages').select('*').order('created_at', { ascending: false }).limit(20);
+    const box = document.getElementById('shoutbox');
+    box.innerHTML = '';
+    data.reverse().forEach(shout => {
+      const div = document.createElement('div');
+      div.className = 'shout';
+      div.innerHTML = `<strong>${shout.username}:</strong> ${shout.message}`;
+      box.appendChild(div);
+    });
+  } catch (e) {
+    console.error('Load shouts error', e);
+  }
+}
+window.postShout = async () => {
+  const message = document.getElementById('shout-input').value.trim();
+  if (!message) return;
+  try {
+    await supabase.from('shoutbox_messages').insert({ user_id: currentUser.id, username: currentUser.username, message });
+    document.getElementById('shout-input').value = '';
+    await loadShouts();
+  } catch (e) {
+    console.error('Post shout error', e);
+  }
+};
+function subscribeToShouts() {
+  supabase
+    .channel('shoutbox')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shoutbox_messages' }, (payload) => {
+      loadShouts();
+    })
+    .subscribe();
+}
+
+// Logout
+window.logout = async () => {
+  await supabase.auth.signOut();
+  window.currentUser = null;
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('auth-buttons').style.display = 'flex';
+  document.getElementById('logout-btn').style.display = 'none';
+};
+    });
+  </script>
+</body>
+</html>

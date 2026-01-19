@@ -721,6 +721,10 @@ window.saveProfile = async () => {
   }
   const mantra = document.createElement('div');
   mantra.className = 'mantra';
+  // Random color
+  const color = window.mantraColors[Math.floor(Math.random() * window.mantraColors.length)];
+  mantra.style.color = color;
+  mantra.style.textShadow = `0 0 10px ${color}`;
   mantra.innerHTML = `${text}
     <div class="mantra-controls">
       <button onclick="resumeMantra(this.closest('.mantra'))" class="resume-btn">Resume</button>
@@ -745,7 +749,6 @@ window.saveProfile = async () => {
     }
   });
 }
-      
       function togglePause(mantra, id) {
         if (mantra.classList.contains('paused')) {
           resumeMantra(mantra);

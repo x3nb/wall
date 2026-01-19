@@ -1,3 +1,16 @@
+<think>
+First, the user wants the complete code in one file because login isn't working. From the conversation, the code has been built incrementally, and there might be missing or broken parts.
+
+</think>### Complete Punk Zen Temple Code (One File)
+Below is the **entire, complete HTML file** for your Punk Zen Temple site. This includes all features we've built: persistent login, magnified notes, drawers for friends/active users, floating mantras with pause/edit/delete, shoutbox, profiles, and more. Copy-paste this into a new file (e.g., `index.html`) and open it in a browser. It should work if your Supabase setup is correct (tables created, RLS enabled, full anon key used).
+
+If login still doesn't work after this:
+- Check the browser console (F12) for errors (e.g., "SyntaxError", "Supabase not defined", or "Auth error").
+- Ensure your Supabase anon key is the full one (replace if truncated).
+- Confirm database tables are created and RLS policies are set (see my previous SQL response).
+- Try signing up first— if that works but login doesn't, it's a session issue.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -464,7 +477,7 @@
 
       // Supabase
       const supabaseUrl = 'https://hwymepujsvfqjkbullaf.supabase.co';
-      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eW1lcHVqc3ZmcWprYnVsbGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDczOTQsImV4cCI6MjA4NDI4MzM5NH0.V6-Cm331IocSXDqe-v6iAZA3TV
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eW1lcHVqc3ZmcWprYnVsbGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDczOTQsImV4cCI6MjA4NDI4MzM5NH0.V6-Cm331IocSXDqe-v6iAZA3TV1STyEHyQI43lcXU_4';
       window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
       window.authMode = null;
       window.currentUser = null;

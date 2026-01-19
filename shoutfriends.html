@@ -790,21 +790,22 @@
       };
 
       // Shoutbox functions
-      async function loadShouts() {
-        try {
-          const { data } = await supabase.from('shoutbox_messages').select('*').order('created_at', { ascending: false }).limit(20);
-          const box = document.getElementById('shoutbox');
-          box.innerHTML = '';
-          data.reverse().forEach(shout => {
-            const div = document.createElement('div');
-            div.className = 'shout';
-            div.innerHTML = `<strong>${shout.username}:</strong> ${shout.message}`;
-            box.appendChild(div);
-          });
-        } catch (e) {
-          console.error('Load shouts error', e);
-        }
-      }
+       async function loadShouts() {
+  try {
+    const { data } = await supabase.from('shoutbox_messages').select('*').order('created_at', { ascending: false }).limit(20);
+    const box = document.getElementById('shoutbox');
+    box.innerHTML = '';
+    data.reverse().forEach(shout => {
+      const div = document.createElement('div');
+      div.className = 'shout';
+      div.innerHTML = `<strong onclick="openUserModal('${shout.user_id}')" style="cursor:pointer; color:#f0f;">${shout.username}</strong>: ${shout.message}`;
+      box.appendChild(div);
+    });
+  } catch (e) {
+    console.error('Load shouts error', e);
+  }
+}
+      
       window.postShout = async () => {
         const message = document.getElementById('shout-input').value.trim();
         if (!message) return;
@@ -845,6 +846,7 @@
       };
 
       // Friends and active users
+     
       async function loadFriends() {
         try {
           const { data } = await supabase.from('friends').select('friend_id, profiles!inner(username, avatar_url)').eq('user_id', currentUser.id).eq('status', 'accepted');

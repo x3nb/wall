@@ -781,132 +781,131 @@
       document.getElementById('left-drawer').classList.remove('open');
       document.getElementById('right-drawer').classList.remove('open');
       document.getElementById('drawer-overlay').classList.remove('show');
-    };
+   };
 
-    // Friends and active users
-    async function loadFriends() {
-      try {
-        const { data } = await supabase.from('friends').select('friend_id, profiles!inner(username, avatar_url)').eq('user_id', currentUser.id).eq('status', 'accepted');
-        window.friends = data;
-        renderFriends();
-      } catch (e) {
-        console.error('Load friends error', e);
+// Friends and active users
+async function loadFriends() {
+  try {
+    const { data } = await supabase.from('friends').select('friend_id, profiles!inner(username, avatar_url)').eq('user_id', currentUser.id).eq('status', 'accepted');
+    window.friends = data;
+    renderFriends();
+  } catch (e) {
+    console.error('Load friends error', e);
+  }
+}
+function renderFriends() {
+  const circles = document.querySelectorAll('.friend-circle');
+  circles.forEach((circle, i) => {
+    if (friends[i]) {
+      circle.innerHTML = `<img src="${friends[i].profiles.avatar_url || 'default.png'}" alt="${friends[i].profiles.username}">`;
+      if (onlineUsers.some(u => u.user_id === friends[i].friend_id)) {
+        circle.innerHTML += '<div class="online-dot"></div>';
       }
+      circle.onclick = () => openUserModal(friends[i].friend_id);
+    } else {
+      circle.innerHTML = '';
+      circle.onclick = null;
     }
-    function renderFriends() {
-      const circles = document.querySelectorAll('.friend-circle');
-      circles.forEach((circle, i) => {
-        if (friends[i]) {
-          circle.innerHTML = `<img src="${friends[i].profiles.avatar_url || 'default.png'}" alt="${friends[i].profiles.username}">`;
-          if (onlineUsers.some(u => u.user_id === friends[i].friend_id)) {
-            circle.innerHTML += '<div class="online-dot"></div>';
-          }
-          circle.onclick = () => openUserModal(friends[i].friend_id);
-        } else {
-          circle.innerHTML = '';
-          circle.onclick = null;
-        }
-    }
-    async function loadActiveUsers() {
-      try {
-        const { data } = await supabase.from('user_status').select('user_id, profiles!inner(username, avatar_url)').eq('online', true).neq('user_id', currentUser.id);
-        window.onlineUsers = data;
-        renderActiveUsers();
-      } catch (e) {
-        console.error('Load active users error', e);
-
-        }
-      }
-      function renderActiveUsers() {
-        const list = document.getElementById('active-users-list');
-        list.innerHTML = '';
-        onlineUsers.forEach(user => {
-          const div = document.createElement('div');
-          div.innerHTML = `<img src="${user.profiles.avatar_url || 'default.png'}" style="width:50px; height:50px; border-radius:50%;"> ${user.profiles.username}`;
-          div.onclick = () => openUserModal(user.user_id);
-          list.appendChild(div);
-        });
-        renderFriends(); // Update friends online status
-});
-    }
-    function subscribeToStatus() {
-      supabase
-        .channel('status')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_status' }, (payload) => {
-          loadActiveUsers();
-        })
-        .subscribe();
-    }
-    async function setOnlineStatus(online) {
-      try {
-        await supabase.from('user_status').upsert({ user_id: currentUser.id, online, last_seen: new Date() });
-      } catch (e) {
-        console.error('Set status error', e);
-      }
-    }
-
-    // User modal
-    window.openUserModal = async (userId) => {
-      if (!userId) return;
-      try {
-        const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        const modalBody = document.getElementById('modal-body');
-        modalBody.innerHTML = `
-          <img src="${data.avatar_url || 'default.png'}" style="width:100px; height:100px; border-radius:50%;">
-          <h3>${data.username}</h3>
-          <p>${data.bio || 'No bio yet.'}</p>
-          <textarea id="message-input" placeholder="Send a message..."></textarea>
-          <button onclick="sendMessage(${userId})">Send</button>
-          <button onclick="addFriend(${userId})">Add Friend</button>
-        `;
-        document.getElementById('modal').classList.add('show');
-      } catch (e) {
-        console.error('Load user error', e);
-      }
-    };
-    window.sendMessage = async (toUser) => {
-      const message = document.getElementById('message-input').value.trim();
-      if (!message) return;
-      try {
-        await supabase.from('messages').insert({ from_user: currentUser.id, to_user, message });
-        alert('Message sent!');
-        closeModal();
-      } catch (e) {
-        console.error('Send message error', e);
-      }
-    };
-    window.addFriend = async (friendId) => {
-      try {
-        await supabase.from('friends').insert({ user_id: currentUser.id, friend_id: friendId, status: 'pending' });
-        alert('Friend request sent!');
-        closeModal();
-      } catch (e) {
-        console.error('Add friend error', e);
-      }
-    };
-
-    // Logout
-    window.logout = async () => {
-      try {
-        await setOnlineStatus(false);
-        await supabase.auth.signOut();
-        window.currentUser = null;
-        // Reset UI
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('auth-buttons').style.display = 'flex';
-        document.getElementById('logout-btn').style.display = 'none';
-        document.getElementById('auth-form').style.display = 'none';
-        // Clear data
-        document.getElementById('notes-board').innerHTML = '';
-        document.getElementById('personal-notes').innerHTML = '';
-        document.getElementById('shoutbox').innerHTML = '';
-        alert('Logged out successfully!');
-      } catch (e) {
-        console.error('Logout error', e);
-        alert('Error logging out');
-      }
-    };
   });
-  </script>
+}
+async function loadActiveUsers() {
+  try {
+    const { data } = await supabase.from('user_status').select('user_id, profiles!inner(username, avatar_url)').eq('online', true).neq('user_id', currentUser.id);
+    window.onlineUsers = data;
+    renderActiveUsers();
+  } catch (e) {
+    console.error('Load active users error', e);
+  }
+}
+function renderActiveUsers() {
+  const list = document.getElementById('active-users-list');
+  list.innerHTML = '';
+  onlineUsers.forEach(user => {
+    const div = document.createElement('div');
+    div.innerHTML = `<img src="${user.profiles.avatar_url || 'default.png'}" style="width:50px; height:50px; border-radius:50%;"> ${user.profiles.username}`;
+    div.onclick = () => openUserModal(user.user_id);
+    list.appendChild(div);
+  });
+  renderFriends(); // Update friends online status
+}
+function subscribeToStatus() {
+  supabase
+    .channel('status')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_status' }, (payload) => {
+      loadActiveUsers();
+    })
+    .subscribe();
+}
+async function setOnlineStatus(online) {
+  try {
+    await supabase.from('user_status').upsert({ user_id: currentUser.id, online, last_seen: new Date() });
+  } catch (e) {
+    console.error('Set status error', e);
+  }
+}
+
+// User modal
+window.openUserModal = async (userId) => {
+  if (!userId) return;
+  try {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    const modalBody = document.getElementById('modal-body');
+    modalBody.innerHTML = `
+      <img src="${data.avatar_url || 'default.png'}" style="width:100px; height:100px; border-radius:50%;">
+      <h3>${data.username}</h3>
+      <p>${data.bio || 'No bio yet.'}</p>
+      <textarea id="message-input" placeholder="Send a message..."></textarea>
+      <button onclick="sendMessage(${userId})">Send</button>
+      <button onclick="addFriend(${userId})">Add Friend</button>
+    `;
+    document.getElementById('modal').classList.add('show');
+  } catch (e) {
+    console.error('Load user error', e);
+  }
+};
+window.sendMessage = async (toUser) => {
+  const message = document.getElementById('message-input').value.trim();
+  if (!message) return;
+  try {
+    await supabase.from('messages').insert({ from_user: currentUser.id, to_user, message });
+    alert('Message sent!');
+    closeModal();
+  } catch (e) {
+    console.error('Send message error', e);
+  }
+};
+window.addFriend = async (friendId) => {
+  try {
+    await supabase.from('friends').insert({ user_id: currentUser.id, friend_id: friendId, status: 'pending' });
+    alert('Friend request sent!');
+    closeModal();
+  } catch (e) {
+    console.error('Add friend error', e);
+  }
+};
+
+// Logout
+window.logout = async () => {
+  try {
+    await setOnlineStatus(false);
+    await supabase.auth.signOut();
+    window.currentUser = null;
+    // Reset UI
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('auth-buttons').style.display = 'flex';
+    document.getElementById('logout-btn').style.display = 'none';
+    document.getElementById('auth-form').style.display = 'none';
+    // Clear data
+    document.getElementById('notes-board').innerHTML = '';
+    document.getElementById('personal-notes').innerHTML = '';
+    document.getElementById('shoutbox').innerHTML = '';
+    alert('Logged out successfully!');
+  } catch (e) {
+    console.error('Logout error', e);
+    alert('Error logging out');
+  }
+};
+  });
+</script>
 </body>
 </html>

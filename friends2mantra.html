@@ -281,6 +281,63 @@
       .tabs { flex-direction: column; }
       .drawer { width: 250px; }
     }
+    /* Add to existing <style> */
+#zen-den-sky {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+  background: linear-gradient(to top, #000, #111);
+  border: 2px solid #f0f;
+  margin: 20px 0;
+}
+.mantra {
+  position: absolute;
+  bottom: 0;
+  font-family: 'Vast Shadow', cursive;
+  color: #f0f;
+  opacity: 1;
+  font-size: 1.2em;
+  text-shadow: 0 0 10px #f0f;
+  animation: floatUp 12s linear forwards;
+  pointer-events: none;
+}
+@keyframes floatUp {
+  0% {
+    bottom: 0;
+    left: calc(50% - 50px);
+    opacity: 1;
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(20px);
+  }
+  50% {
+    transform: translateX(-20px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+  100% {
+    bottom: 100%;
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+.mantra:hover {
+  pointer-events: auto;
+}
+.mantra-controls {
+  display: none;
+  position: absolute;
+  top: -30px;
+  right: 0;
+  background: rgba(0,0,0,0.8);
+  padding: 5px;
+  border-radius: 5px;
+}
+.mantra:hover .mantra-controls {
+  display: block;
+}
   </style>
 </head>
 <body>

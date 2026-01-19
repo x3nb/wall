@@ -664,34 +664,67 @@
       window.closeModal = () => {
         document.getElementById('modal').classList.remove('show');
       };
-
-      // Personal notes functions
-      async function loadPersonalNotes() {
-        try {
-          const { data } = await supabase.from('personal_notes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-          const container = document.getElementById('personal-notes');
-          container.innerHTML = '';
-          data.forEach(note => {
-            const div = document.createElement('div');
-            div.className = 'note';
-            div.innerHTML = `<strong>Private Note</strong><br>${note.message}<br><small>${new Date(note.created_at).toLocaleString()}</small>`;
-            container.appendChild(div);
-          });
-        } catch (e) {
-          console.error('Load personal notes error', e);
-        }
-      }
-      window.postPersonalNote = async () => {
-        const message = document.getElementById('personal-note-input').value.trim();
-        if (!message) return;
-        try {
-          await supabase.from('personal_notes').insert({ user_id: currentUser.id, message });
-          document.getElementById('personal-note-input').value = '';
-          await loadPersonalNotes();
-        } catch (e) {
-          console.error('Post personal note error', e);
-        }
-      };
+// Personal mantras functions (renamed from notes)
+async function loadPersonalNotes() {
+  try {
+    const { data } = await supabase.from('personal_notes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    const sky = document.getElementById('zen-den-sky');
+    sky.innerHTML = ''; // Clear existing
+    data.forEach(note => {
+      createFloatingMantra(note.message, note.id);
+    });
+  } catch (e) {
+    console.error('Load personal mantras error', e);
+  }
+}
+window.floatMantra = async () => {
+  const message = document.getElementById('mantra-input').value.trim();
+  if (!message) return;
+  try {
+    const { data } = await supabase.from('personal_notes').insert({ user_id: currentUser.id, message }).select().single();
+    document.getElementById('mantra-input').value = '';
+    createFloatingMantra(message, data.id);
+  } catch (e) {
+    console.error('Float mantra error', e);
+  }
+};
+function createFloatingMantra(text, id) {
+  const sky = document.getElementById('zen-den-sky');
+  const mantra = document.createElement('div');
+  mantra.className = 'mantra';
+  mantra.innerHTML = `${text}
+    <div class="mantra-controls">
+      <button onclick="editMantra(${id}, '${text.replace(/'/g, "\\'")}')">Edit</button>
+      <button onclick="deleteMantra(${id})">Delete</button>
+    </div>`;
+  mantra.style.left = `calc(50% + ${Math.random() * 100 - 50}px)`; // Slight random start
+  sky.appendChild(mantra);
+  // Remove after animation
+  setTimeout(() => {
+    if (mantra.parentNode) mantra.remove();
+  }, 12000);
+}
+window.editMantra = async (id, oldText) => {
+  const newText = prompt('Edit mantra:', oldText);
+  if (newText && newText !== oldText) {
+    try {
+      await supabase.from('personal_notes').update({ message: newText }).eq('id', id);
+      await loadPersonalNotes(); // Refresh
+    } catch (e) {
+      console.error('Edit mantra error', e);
+    }
+  }
+};
+window.deleteMantra = async (id) => {
+  if (confirm('Delete this mantra?')) {
+    try {
+      await supabase.from('personal_notes').delete().eq('id', id);
+      await loadPersonalNotes(); // Refresh
+    } catch (e) {
+      console.error('Delete mantra error', e);
+    }
+  }
+};
 
       // Shoutbox functions
       async function loadShouts() {

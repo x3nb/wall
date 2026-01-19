@@ -716,6 +716,11 @@
       };
       function createFloatingMantra(text, id) {
   const sky = document.getElementById('zen-den-sky');
+  // Limit to 10 mantras
+  const existing = sky.querySelectorAll('.mantra');
+  if (existing.length >= 10) {
+    existing[0].remove(); // Remove oldest
+  }
   const mantra = document.createElement('div');
   mantra.className = 'mantra';
   mantra.innerHTML = `${text}
@@ -727,17 +732,20 @@
       <input type="text" id="add-word-${id}" placeholder="Add word..." onkeydown="if(event.key==='Enter') addWord(${id})">
       <button onclick="addWord(${id})">Add</button>
     </div>`;
-  mantra.style.left = `calc(50% + ${Math.random() * 100 - 50}px)`; // Slight random start
+  // Space them apart (100px increments, wrap around)
+  const leftOffset = (window.mantraCounter % 5) * 100 - 200; // -200 to 200px range
+  mantra.style.left = `calc(50% + ${leftOffset}px)`;
+  window.mantraCounter++;
   mantra.onclick = () => togglePause(mantra, id);
   sky.appendChild(mantra);
-  // Remove after animation
-  setTimeout(() => {
-    if (mantra.parentNode && !mantra.classList.contains('paused')) mantra.remove();
-  }, 12000);
-  // Auto-resume if paused too long
-  setTimeout(() => {
-    if (mantra.classList.contains('paused')) resumeMantra(mantra);
-  }, 30000);
+  // Loop: Reset after animation ends
+  mantra.addEventListener('animationend', () => {
+    if (!mantra.classList.contains('paused')) {
+      mantra.style.bottom = '0';
+      mantra.style.animation = 'none';
+      setTimeout(() => mantra.style.animation = '', 10); // Restart
+    }
+  });
 }
       
       function togglePause(mantra, id) {
